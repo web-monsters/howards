@@ -3,6 +3,7 @@ const sass = require("gulp-sass");
 const browserSync = require("browser-sync").create();
 const plumber = require("gulp-plumber");
 const postcss = require("gulp-postcss");
+const del = require('del');
 const autoprefixer = require("autoprefixer");
 const minify = require("gulp-csso");
 const rename = require("gulp-rename");
@@ -11,6 +12,10 @@ const webp = require('gulp-webp');
 const pug = require('gulp-pug');
 const concat = require('gulp-concat');
 
+
+function cleanBuild () {
+  return del('dist/*');
+}
 
 function compileStyles() {
   return src('src/styles/index.scss')
@@ -22,7 +27,6 @@ function compileStyles() {
     .pipe(minify())
     .pipe(rename('style.min.css'));
 }
-
 
 function initServer() {
   browserSync.init({
@@ -38,7 +42,7 @@ function watchFiles() {
 
   watch('src/styles/*.scss').on('change', series(compileStyles, browserSync.reload));
   watch('src/app/**/*.pug').on('change', series(gulpPug, browserSync.reload));
-};
+}
 
 exports.watch = watchFiles;
 
