@@ -23,6 +23,14 @@ function compileStyles() {
     .pipe(rename('style.min.css'));
 }
 
+function gulpPug() {
+  return src('src/layouts/**/*.pug')
+    .pipe(pug({
+      pretty: true
+    }))
+
+    .pipe(dest('build'));
+}
 
 function initServer() {
   browserSync.init({
@@ -40,20 +48,8 @@ function watchFiles() {
   watch('src/app/**/*.pug').on('change', series(gulpPug, browserSync.reload));
 };
 
-exports.watch = watchFiles;
-
-
-function gulpPug() {
-  return src('src/layouts/**/*.pug')
-    .pipe(pug({
-      pretty: true
-    }))
-
-    .pipe(dest('build'));
-}
-
 exports.pug = gulpPug;
-
+exports.watch = watchFiles;
 
   // function zipImages() {
   //   return src('src/assets/img/**/*.{png, jpg, svg}')
