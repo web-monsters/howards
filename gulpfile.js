@@ -1,6 +1,6 @@
 const { src, watch, dest, series } = require("gulp");
 const sass = require("gulp-sass");
-const server = require("browser-sync").create();
+const browserSync = require("browser-sync").create();
 const plumber = require("gulp-plumber");
 const postcss = require("gulp-postcss");
 const autoprefixer = require("autoprefixer");
@@ -12,33 +12,20 @@ const pug = require('gulp-pug');
 const concat = require('gulp-concat');
 
 
-function style() {
-  return src('source/scss/index.scss')
+function compileStyles() {
+  return src('src/styles/index.scss')
     .pipe(plumber())
     .pipe(sass())
     .pipe(postcss([autoprefixer()]))
     .pipe(concat('main.css'))
     .pipe(dest('build/'))
     .pipe(minify())
-    .pipe(rename('style.min.css'))
-    .pipe(server.stream());
+    .pipe(rename('style.min.css'));
 }
 
-function zipImages() {
-  return src('source/assets/img/**/*.{png, jpg, svg}')
-    .pipe(imagemin([
-      imagemin.optipng({optimizationLevel: 3}),
-      imagemin.jpegtran({progressive: true}),
-      imagemin.svgo()
-    ]))
 
-    .pipe(dest('source/img'));
-};
-
-
-
-function server() {
-  browserSync.init( {
+function initServer() {
+  browserSync.init({
     server: {
       basedir: './'
     },
@@ -46,39 +33,55 @@ function server() {
   });
 }
 
-function watcher() {
-  server();
+function watchFiles() {
+  initServer();
 
-  watch('source/scss/**/*.scss', series(style, server.stream));
-  watch('source/*.html').on('change', server.reload);
+  watch('src/styles/*.scss').on('change', series(compileStyles, browserSync.reload));
+  watch('src/app/**/*.pug').on('change', series(gulpPug, browserSync.reload));
 };
 
-exports.watch = watcher;
+exports.watch = watchFiles;
+
+
+function gulpPug() {
+  return src('src/layouts/**/*.pug')
+    .pipe(pug({
+      pretty: true
+    }))
+
+    .pipe(dest('build'));
+}
+
+exports.pug = gulpPug;
+
+
+  // function zipImages() {
+  //   return src('src/assets/img/**/*.{png, jpg, svg}')
+  //     .pipe(imagemin([
+  //       imagemin.optipng({ optimizationLevel: 3 }),
+  //       imagemin.jpegtran({ progressive: true }),
+  //       imagemin.svgo()
+  //     ]))
+
+  //     .pipe(dest('src/img'));
+  // };
 
 
 
+// gulp.task('webp', function () {
+//   return gulp.src('source/assets/img/**/*.{png,jpg')
+//     .pipe(webp({ quality: 90 }))
+//     .pipe(gulp.dest('source/img'));
+// });
+
+// gulp.task('views', function buildHTML() {
+//   return gulp.src('sourrce/layouts/**/*.pug')
+//     .pipe(pug({
+
+//     }))
 
 
-
-
-
-
-
-
-gulp.task('webp', function() {
-    return gulp.src('source/assets/img/**/*.{png,jpg')
-        .pipe(webp({quality: 90}))
-        .pipe(gulp.dest('source/img'));
-});
-
-gulp.task('views', function buildHTML() {
-    return gulp.src('sourrce/layouts/**/*.pug')
-        .pipe(pug({
-            
-        }))
-
-
-})
+// })
 
 // gulp.task('images', function() {
 //   return gulp.src('source/assets/img/**/*.{png, jpg, svg')
