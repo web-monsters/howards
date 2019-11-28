@@ -3,7 +3,7 @@ const sass = require("gulp-sass");
 const browserSync = require("browser-sync").create();
 const plumber = require("gulp-plumber");
 const postcss = require("gulp-postcss");
-const del = require('del');
+const del = require("del");
 const autoprefixer = require("autoprefixer");
 const minify = require("gulp-csso");
 const rename = require("gulp-rename");
@@ -14,7 +14,7 @@ const concat = require('gulp-concat');
 
 
 function cleanBuild () {
-  return del('dist/*');
+  return del('build/*');
 }
 
 function compileStyles() {
@@ -28,12 +28,29 @@ function compileStyles() {
     .pipe(rename('style.min.css'));
 }
 
+function compilePug () {
+  return src('src/layouts/**/*.pug')
+    .pipe(pug({
+      pretty: true
+    }))
+    .pipe(concat('index.html'))
+
+    .pipe(dest('build/'));
+}
+
+async function buildProject () {
+  await compilePug();
+  await compileStyles();
+}
+
 function initServer() {
   browserSync.init({
     server: {
-      basedir: './'
+      baseDir: './build'
     },
-    notify: false
+    notify: false,
+    open: false,
+    port: process.env.PORT || 3000,
   });
 }
 
@@ -41,23 +58,11 @@ function watchFiles() {
   initServer();
 
   watch('src/styles/*.scss').on('change', series(compileStyles, browserSync.reload));
-  watch('src/app/**/*.pug').on('change', series(gulpPug, browserSync.reload));
+  watch('src/app/**/*.pug').on('change', series(compilePug, browserSync.reload));
 }
 
-exports.watch = watchFiles;
-
-
-function gulpPug() {
-  return src('src/layouts/**/*.pug')
-    .pipe(pug({
-      pretty: true
-    }))
-
-    .pipe(dest('build'));
-}
-
-exports.pug = gulpPug;
-
+exports.pug = compilePug;
+exports.watch = series(cleanBuild, buildProject, watchFiles);
 
   // function zipImages() {
   //   return src('src/assets/img/**/*.{png, jpg, svg}')
