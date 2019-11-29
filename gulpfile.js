@@ -18,6 +18,8 @@ function cleanBuild () {
 }
 
 function compileStyles() {
+  console.log('compilingStyles');
+
   return src('src/styles/index.scss')
     .pipe(plumber())
     .pipe(sass())
@@ -29,6 +31,8 @@ function compileStyles() {
 }
 
 function compilePug () {
+  console.log('compiling Pug');
+
   return src('src/layouts/**/*.pug')
     .pipe(pug({
       pretty: true
@@ -54,14 +58,17 @@ function initServer() {
   });
 }
 
-function watchFiles() {
+async function watchFiles() {
+  await buildProject();
   initServer();
 
-  watch('src/styles/*.scss').on('change', series(compileStyles, browserSync.reload));
-  watch('src/app/**/*.pug').on('change', series(compilePug, browserSync.reload));
+  watch('src/styles/**/*.scss').on('change', compileStyles);
+  watch('src/layouts/**/*.pug').on('change', compilePug);
+
+  watch('build/**/*.*').on('change', browserSync.reload);
 }
 
-exports.pug = compilePug;
+exports.build = series(cleanBuild, buildProject);
 exports.watch = series(cleanBuild, buildProject, watchFiles);
 
   // function zipImages() {
